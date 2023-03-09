@@ -31,11 +31,45 @@ Documentation = "https://github.com/swedwise/pynodinite#readme"
 Issues = "https://github.com/swedwise/pynodinite/issues"
 Source = "https://github.com/swedwise/pynodinite"
 
+[project.optional-dependencies]
+activemq = [
+  "stomp.py",
+]
+eventhub = [
+  "azure-eventhub"
+]
+msmq = [
+  "pywin32"
+]
+postgresql = [
+  "psycopg2-binary"
+]
+servicebus = [
+  "azure-servicebus"
+]
+sqlserver = [
+  "pyodbc"
+]
+all = [
+  "stomp.py",
+  "azure-eventhub",
+  "pywin32",
+  "psycopg2-binary",
+  "azure-servicebus",
+  "pyodbc",
+]
+
 [tool.hatch.version]
 path = "src/pynodinite/__about__.py"
 
 [tool.hatch.envs.default]
 dependencies = [
+  "stomp.py",
+  "azure-eventhub",
+  "pywin32",
+  "psycopg2-binary",
+  "azure-servicebus",
+  "pyodbc",
   "pytest",
   "pytest-cov",
 ]
