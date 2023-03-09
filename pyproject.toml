@@ -1,0 +1,79 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pynodinite"
+description = 'A series of logging handler implementations producing Nodinite JSON Log Events and sending these to one of the supported intermediary storages'
+readme = "README.md"
+requires-python = ">=3.7"
+license = "MIT"
+keywords = ["Nodinite", "logging", "monitoring"]
+authors = [
+  { name = "Henrik Blidh", email = "henrik.blidh@swedwise.se" },
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+]
+dependencies = []
+dynamic = ["version"]
+
+[project.urls]
+Documentation = "https://github.com/swedwise/pynodinite#readme"
+Issues = "https://github.com/swedwise/pynodinite/issues"
+Source = "https://github.com/swedwise/pynodinite"
+
+[tool.hatch.version]
+path = "src/pynodinite/__about__.py"
+
+[tool.hatch.envs.default]
+dependencies = [
+  "pytest",
+  "pytest-cov",
+]
+[tool.hatch.envs.default.scripts]
+cov = "pytest --cov-report=term-missing --cov-config=pyproject.toml --cov=pynodinite --cov=tests {args}"
+no-cov = "cov --no-cov {args}"
+
+[tool.hatch.envs.lint]
+detached = true
+dependencies = [
+  "black>=22.10.0",
+  "flake8"
+]
+[tool.hatch.envs.lint.scripts]
+fmt = "black {args:.}"
+check = [
+  "black {args:.} --check --diff",
+  "flake8 {args:.} --count --show-source --statistics --max-line-length=120"
+]
+all = ["fmt"]
+
+[[tool.hatch.envs.test.matrix]]
+python = ["37", "38", "39", "310", "311"]
+
+[tool.black]
+target-version = ["py310"]
+line-length = 120
+
+[tool.coverage.run]
+branch = true
+parallel = true
+omit = [
+  "src/pynodinite/__about__.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+  "no cov",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+]
