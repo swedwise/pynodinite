@@ -6,7 +6,7 @@ class EndpointDirection(Enum):
     RECEIVE = 0
     # Send -One-Way, for example, send a file to SFTP
     SEND = 1
-    # Two-way Receive -For example an An API sponsoring incoming requests
+    # Two-way Receive -For example an API sponsoring incoming requests
     TWOWAY_RECEIVE = 10
     # Two-way Send - A client calling some REST API or a call to a stored parameterized procedure
     TWOWAY_SEND = 11

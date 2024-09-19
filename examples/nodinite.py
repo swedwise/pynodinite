@@ -9,7 +9,7 @@ def main():
     logger.setLevel(logging.DEBUG)
     logger.addHandler(
         NodiniteLogAPIEventHandler(
-            "https://nodiniteinstall.westeurope.cloudapp.azure.com/Nodinite/Test",
+            "https://integrationswedwise.westeurope.cloudapp.azure.com/Nodinite/Test",
             2,
             "Python API Handler",
             "http://localhost:8000",

@@ -1,6 +1,8 @@
+import datetime
 import json
 import logging
 from threading import Thread
+from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 from pynodinite.core import NodiniteBaseLogEventHandler
@@ -51,14 +53,18 @@ class NodiniteLogAPIEventHandler(NodiniteBaseLogEventHandler):
         doc = self.format(record)
         req = Request(
             f"{self._logapi_url}/LogAPI/api/logevent",
-            json.dumps(doc, ensure_ascii=True).encode("ascii"),
-            {"Content-Type": "application/json"},
+            data=doc.encode('utf-8'),
+            headers={"Content-Type": "application/json"},
+            method="POST",
         )
 
-        with urlopen(req) as response:
-            result = json.loads(response.read())
+        try:
+            with urlopen(req) as response:
+                result = json.loads(response.read())
+        except HTTPError as e:
+            print(e)
 
-        if result["status"] != 0:
+        if result["Status"] != 0:
             # Error has occurred.
             # TODO: Handle exceptions?
             pass

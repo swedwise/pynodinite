@@ -1,11 +1,14 @@
 import base64
 import datetime
 import getpass
+import json
 import logging
 import os
-from sys import platform
+import platform
 
 from pynodinite.enums import EndpointType, EventDirections
+
+
 
 
 class NodiniteBaseLogEventHandler(logging.Handler):
@@ -54,6 +57,7 @@ class NodiniteBaseLogEventHandler(logging.Handler):
         string  ProcessingTime - Flow execution time so far in milliseconds
 
         """
+        dt = datetime.datetime.now()
         # TODO: How to handle context values? Args? Extra?
         direction = record.args[0].value if record.args else EventDirections.DEFAULT.value
         context = record.args[1] if record.args and len(record.args) > 1 and isinstance(record.args[1], dict) else {}
@@ -68,20 +72,21 @@ class NodiniteBaseLogEventHandler(logging.Handler):
             "EndPointDirection": 1,  # Direction for Endpoint transport
             "EndPointTypeId": self.endpoint_type_id,  # Type of Endpoint transport
             "OriginalMessageTypeName": record.name,  # The name of the message type
-            "LogDateTime": datetime.datetime.fromtimestamp(record.created).isoformat(),
+            "LogDateTime": dt.isoformat(),  #datetime.datetime.fromtimestamp(record.created).isoformat(),
             # Optional fields ----------------------------------------------------------
+            "SequenceNo": record.args[3] if record.args and len(record.args) > 3 else "",
             "EventDirection": direction,
             "ProcessingUser": f"{os.environ['userdomain']}\\{getpass.getuser()}",
             "LogText": record.msg,
-            "LogStatus": record.levelno,
+            "LogStatus": str(record.levelno),
             "ProcessName": record.processName,
             "ProcessingMachineName": platform.node(),
             "ProcessingModuleName": __name__,
-            "ProcessingModuleType": "Python Application",
+            "ProcessingModuleType": "pyNodinite",
             "Body": base64.b64encode(body.encode()).decode("ascii"),
             "Context": context,
         }
-        return doc
+        return json.dumps(doc)
 
     def emit(self, record: logging.LogRecord) -> None:
         raise NotImplementedError("Do not use this base class!")
