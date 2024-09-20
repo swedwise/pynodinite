@@ -6,7 +6,7 @@ import logging
 import os
 import platform
 
-from pynodinite.enums import EndpointType, EventDirections
+from pynodinite.enums import EndpointType, EventDirections, EndpointDirection
 
 
 
@@ -57,33 +57,43 @@ class NodiniteBaseLogEventHandler(logging.Handler):
         string  ProcessingTime - Flow execution time so far in milliseconds
 
         """
-        dt = datetime.datetime.now()
-        # TODO: How to handle context values? Args? Extra?
-        direction = record.args[0].value if record.args else EventDirections.DEFAULT.value
-        context = record.args[1] if record.args and len(record.args) > 1 and isinstance(record.args[1], dict) else {}
-        body = record.args[2] if record.args and len(record.args) > 2 else ""
+        if hasattr(record, "Nodinite"):
+            nodinite = record.Nodinite
+        else:
+            nodinite = {}
+
+        body = base64.b64encode(nodinite.get("Body", "").encode()).decode("ascii")
+        context = nodinite.get("Context", {})
         if record.exc_text:
             context["Exception"] = record.exc_text
+
         doc = {
             # Required fields ----------------------------------------------------------
-            "LogAgentValueId": self.log_agent_id,  # Who (Log Agents) sent the data
-            "EndPointName": self.endpoint_name,  # Name of Endpoint transport
-            "EndPointUri": self.endpoint_uri,  # URI for Endpoint transport
-            "EndPointDirection": 1,  # Direction for Endpoint transport
-            "EndPointTypeId": self.endpoint_type_id,  # Type of Endpoint transport
-            "OriginalMessageTypeName": record.name,  # The name of the message type
-            "LogDateTime": dt.isoformat(),  #datetime.datetime.fromtimestamp(record.created).isoformat(),
-            # Optional fields ----------------------------------------------------------
-            "SequenceNo": record.args[3] if record.args and len(record.args) > 3 else "",
-            "EventDirection": direction,
+            "LogAgentValueId": nodinite.get("LogAgentValueId", self.log_agent_id),  # Who (Log Agents) sent the data
+            "EndPointName": nodinite.get("EndPointName", self.endpoint_name),  # Name of Endpoint transport
+            "EndPointUri": nodinite.get("EndPointUri", self.endpoint_uri),  # URI for Endpoint transport
+            "EndPointDirection": nodinite.get("EndPointDirection", EndpointDirection.SEND).value,  # Direction for Endpoint transport
+            "EndPointTypeId": nodinite.get("EndPointTypeId", self.endpoint_type_id),  # Type of Endpoint transport
+            "OriginalMessageTypeName": nodinite.get("EndPointTypeId", record.name),  # The name of the message type
+            "LogDateTime": datetime.datetime.fromtimestamp(record.created).isoformat(),
+            # Optional fields, but with defaults ---------------------------------------
+            "EventDirection": nodinite.get("EventDirection", EventDirections.DEFAULT).value,
             "ProcessingUser": f"{os.environ['userdomain']}\\{getpass.getuser()}",
+            "ProcessName": nodinite.get("ProcessName", record.processName),
+            "ProcessingMachineName": nodinite.get("ProcessingMachineName", platform.node()),
+            "ProcessingModuleName": nodinite.get("ProcessingModuleName", __name__),
+            "ProcessingModuleType": nodinite.get("ProcessingModuleType", "pyNodinite"),
+            # Optional fields ----------------------------------------------------------
+            "SequenceNo": nodinite.get("SequenceNo", None),
+            "EventNumber": nodinite.get("EventNumber", None),
+            "ApplicationInterchangeId": nodinite.get("ApplicationInterchangeId", None),  # str Id for Application scope
+            "LocalInterchangeId": nodinite.get("LocalInterchangeId", None),              # guid Id for local scope
+            "ServiceInstanceActivityId": nodinite.get("ProcessingModuleType", None),     # guid  Id for run scope
+            "ProcessingTime": nodinite.get("ProcessingTime", None), # Flow execution time so far in milliseconds
+            # Data fields --------------------------------------------------------------
             "LogText": record.msg,
-            "LogStatus": str(record.levelno),
-            "ProcessName": record.processName,
-            "ProcessingMachineName": platform.node(),
-            "ProcessingModuleName": __name__,
-            "ProcessingModuleType": "pyNodinite",
-            "Body": base64.b64encode(body.encode()).decode("ascii"),
+            "LogStatus": nodinite.get("LogStatus", str(record.levelno)),
+            "Body":  body,
             "Context": context,
         }
         return json.dumps(doc)

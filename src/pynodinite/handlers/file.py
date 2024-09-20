@@ -34,7 +34,8 @@ class NodiniteFileLogEventhandler(NodiniteBaseLogEventHandler):
     def _save_json_to_file(self, record: logging.LogRecord):
         doc = self.format(record)
         with self._path.joinpath(f"{uuid.uuid4()}.json").open(mode="wt") as f:
-            json.dump(doc, f, ensure_ascii=False)
+            f.write(doc)
 
     def emit(self, record: logging.LogRecord) -> None:
+        # Perform a fire and forget operation on separate thread.
         Thread(target=self._save_json_to_file, args=(record,)).start()
